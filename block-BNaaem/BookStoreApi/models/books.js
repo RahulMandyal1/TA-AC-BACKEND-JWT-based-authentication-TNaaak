@@ -13,6 +13,9 @@ const bookSchema = new mongoose.Schema({
   author: {
     type: String,
   },
+  price: {
+    type: Number,
+  },
   comments: [
     {
       type: mongoose.Schema.Types.ObjectId,

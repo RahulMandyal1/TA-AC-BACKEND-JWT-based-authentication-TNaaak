@@ -6,6 +6,8 @@ const Category = require("../models/category");
 const auth = require("../middlewares/auth");
 const Cart = require("../models/usercart");
 const User = require("../models/users");
+const { create } = require("../models/users");
+const Comment = require("../models/comment");
 //list all the books
 router.get("/", async (req, res) => {
   try {
@@ -144,30 +146,50 @@ router.get("/alltags/ascending", async (req, res) => {
   }
 });
 
-//user cart add books  to user cart
+//user cart  : it will return all those book which that user has added
+// in his cart
 router.get("/:id/addtocart", async (req, res) => {
-  req.user.id = "626fd4a9e8c0745bc9f8999d";
   try {
-    console.log(req.user.id);
-    let user = await User.findById(req.user.id);
-    let book = await Book.findById(req.params.id);
-    console.log(user, book);
+    req.userid = "6270bbe196cd34766c482eb4";
+    let id = req.params.id;
+    let createCart = await Cart.create({ user: req.userid, bookId: id });
+    let allBooksinCart = await Cart.find({ user: req.userid }).populate(
+      "bookId"
+    );
+    res.status(200).json(allBooksinCart);
   } catch (e) {
+    console.log(req.userid);
     res.json({ error: " an error occured in the  the user cart" });
   }
 });
-
+// remove  an book from the user cart
+router.get("/:id/deletecart", async (req, res) => {
+  try {
+    let id = req.params.id;
+    let createCart = await Cart.findByIdAndDelete(id);
+    let allBooksinCart = await Cart.find({ user: req.userid }).populate(
+      "bookId"
+    );
+    res.status(200).json(allBooksinCart);
+  } catch (e) {
+    console.log(req.userid);
+    res.json({ error: " an error occured in the  delete user cart" });
+  }
+});
+// create a comment in  the bookstore app
+router.post("/:bookId/comment", async (req, res) => {
+  try {
+    req.body.userId = req.userid;
+    req.body.bookId = req.params.bookId;
+    let comment = await Comment.create(req.body);
+    let updateBook = await Book.findByIdAndUpdate(
+      req.params.bookId,
+      { $push: { comments: comment._id } },
+      { new: true }
+    );
+    res.status(201).json({ message: "comment created sucessfully" });
+  } catch (e) {
+    return res.json({ error: "comment is not created sucessfully" });
+  }
+});
 module.exports = router;
-
-// let addtocart = await Cart.create({ user: user._id });
-//     let addBookTocart = await Cart.findByIdAndUpdate(
-//       addtocart._id,
-//       {
-//         $push: { userCart: id },
-//       },
-//       { new: true }
-//     );
-//     let allBooksinCart = await Cart.find({ user: req.user._id }).populate(
-//       "userCart"
-//     );
-//     return res.status(202).json({ allBooksinCart });
