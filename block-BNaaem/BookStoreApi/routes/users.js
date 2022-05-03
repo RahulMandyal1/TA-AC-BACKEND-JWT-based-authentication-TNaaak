@@ -8,8 +8,7 @@ router.post("/register", async (req, res) => {
   try {
     console.log(" this is the register data", req.body);
     let user = await User.create(req.body);
-    let token = await user.signToken();
-    res.redirect("/");
+    res.status(201).json({ user: user });
   } catch (e) {
     res.status(500).json(e);
   }

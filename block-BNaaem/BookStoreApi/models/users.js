@@ -16,6 +16,12 @@ let userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  bookId: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Book",
+    },
+  ],
 });
 
 // Before registring the user hash the password

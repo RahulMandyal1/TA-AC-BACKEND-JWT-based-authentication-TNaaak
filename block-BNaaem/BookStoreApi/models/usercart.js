@@ -4,12 +4,10 @@ let cartSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-  userCart: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Book",
-    },
-  ],
+  bookId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Book",
+  },
 });
 
 let UserCart = mongoose.model("UserCart", cartSchema);
