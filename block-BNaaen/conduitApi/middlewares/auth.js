@@ -11,6 +11,7 @@ module.exports = {
     try {
       let isVerified = jwt.verify(token, process.env.SECRET);
       req.user = isVerified;
+      console.log(req.user);
       return next();
     } catch (err) {
       console.log(" get an error  token is not matched menas", err);
