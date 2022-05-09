@@ -28,8 +28,8 @@ router.put("/",  async (req, res, next) => {
       { new: true }
     );
     res.status(202).json({ user: user });
-  } catch (e) {
-    res.status(500).json({ error: " user is not updated " });
+  } catch (error) {
+    next(error);
   }
 });
 
