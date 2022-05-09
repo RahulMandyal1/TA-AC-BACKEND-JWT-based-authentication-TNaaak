@@ -13,8 +13,8 @@ router.post("/", async (req, res) => {
     let token = user.signToken();
     console.log(token);
     res.status(201).json({ user: user });
-  } catch (err) {
-    res.json({ err: err });
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -25,26 +25,26 @@ router.post("/login", async (req, res) => {
     let { email, password } = req.body;
     if (!email || !password) {
       return res
-        .status(500)
+        .status(400)
         .json({ error: "both password and email is required" });
     }
     let user = await User.findOne({ email: email });
     // if the user is not exits in the database
     if (!user) {
-      return res.status(500).json({ error: "user is not registered" });
+      return res.status(400).json({ error: "user is not registered" });
     }
     // if the user is exits then compare  the password
     let isMatched = await bcrypt.compare(password, user.password);
     // if the password is not matched
     if (!isMatched) {
-      return res.status(500).json({ error: "user password is not matched" });
+      return res.status(400).json({ error: "user password is not matched" });
     }
     // if user password is mathced then generate  the user  jwt token
     // and send it to the user
     let token = user.signToken();
     res.status(202).json({ user: user });
-  } catch (e) {
-    res.status(500).json({ error: " there is an error in the user login" });
+  } catch (error) {
+    next(error);
   }
 });
 module.exports = router;

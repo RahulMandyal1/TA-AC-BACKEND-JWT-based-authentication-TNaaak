@@ -11,7 +11,7 @@ const { all } = require("express/lib/application");
 
 //feed section get only  the article which is posted by the
 //users whom you are following
-router.get("/feed", auth.optionalAuthorization, async (req, res) => {
+router.get("/feed", auth.optionalAuthorization, async (req, res, next) => {
   let limit = 10;
   let skip = 0;
   if (req.query.limit) {
@@ -35,13 +35,13 @@ router.get("/feed", auth.optionalAuthorization, async (req, res) => {
     //resolved those articles
     let resolvedArticles = await Promise.all(allarticles);
     res.status(202).json({ articles: resolvedArticles });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    next(error);
   }
 });
 
 // get the all articles of all the users
-router.get("/", auth.optionalAuthorization, async (req, res) => {
+router.get("/", auth.optionalAuthorization, async (req, res, next) => {
   let limit = 10;
   let skip = 0;
   let { tag, author, favourite } = req.query;
@@ -70,8 +70,8 @@ router.get("/", auth.optionalAuthorization, async (req, res) => {
       .skip(skip)
       .sort({ _id: -1 });
     res.status(202).json({ articles: articles });
-  } catch (err) {
-    res.status(500).json({ err: "error genereated" });
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -79,7 +79,7 @@ router.get("/", auth.optionalAuthorization, async (req, res) => {
 router.use(auth.isVerified);
 
 //create a article
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   req.body.taglist = req.body.taglist.split(",");
   try {
     req.body.author = req.user.id;
@@ -96,13 +96,13 @@ router.post("/", async (req, res) => {
     );
 
     res.status(201).json({ article: article });
-  } catch (err) {
-    res.status(500).json({ err: "article not created " });
+  } catch (error) {
+    next(error);
   }
 });
 
 // update article
-router.put("/:slug", async (req, res) => {
+router.put("/:slug", async (req, res, next) => {
   //if the user update tags then once again convert str to array
   if (req.body.taglist) {
     req.body.taglist = req.body.taglist.split(",");
@@ -115,19 +115,23 @@ router.put("/:slug", async (req, res) => {
     let user = req.user.id;
     let article = await Article.findOne({ slug: req.params.slug });
     if (user == article.author) {
-      let updateArticle = await Article.findByIdAndUpdate(article._id, req.body, {
-        new: true,
-      });
+      let updateArticle = await Article.findByIdAndUpdate(
+        article._id,
+        req.body,
+        {
+          new: true,
+        }
+      );
       return res.status(202).json({ article: updateArticle });
     }
     return res.status(500).json({ error: "sorry you are not authorized" });
-  } catch (err) {
-    res.status(500).json({ err: "article not updated " });
+  } catch (error) {
+    next(error);
   }
 });
 
 // Delete Article
-router.delete("/:slug", async (req, res) => {
+router.delete("/:slug", async (req, res, next) => {
   try {
     let user = req.user.id;
     let article = await Article.findOne({ slug: req.params.slug });
@@ -137,13 +141,13 @@ router.delete("/:slug", async (req, res) => {
       return res.status(202).json({ article: deletedArticle });
     }
     res.status(500).json({ error: "sorry you are not authorized" });
-  } catch (err) {
-    res.status(500).json({ error: "article not created " });
+  } catch (error) {
+    next(error);
   }
 });
 
 // add a comment in the  article
-router.post("/:slug/comment", async (req, res) => {
+router.post("/:slug/comment", async (req, res, next) => {
   try {
     let article = await Article.findOne({ slug: req.params.slug });
     req.body.author = req.user.id;
@@ -158,8 +162,8 @@ router.post("/:slug/comment", async (req, res) => {
       { new: true }
     );
     res.status(201).json({ comment: comment });
-  } catch (err) {
-    res.status(500).json({ error: "comment is not created " });
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -174,14 +178,14 @@ router.put("/:id/comment", async (req, res) => {
       });
       res.status(202).json({ comment: updatedComment });
     }
-    res.status(500).json({ error: "you are not authorized user " });
-  } catch (err) {
-    res.status(500).json({ error: "comment is not created" });
+    res.status(400).json({ error: "you are not authorized user " });
+  } catch (error) {
+    next(error);
   }
 });
 
 //delete the comment
-router.delete("/:id/comment", async (req, res) => {
+router.delete("/:id/comment", async (req, res, next) => {
   try {
     let id = req.params.id;
     let comment = await Comment.findById(id);
@@ -190,13 +194,13 @@ router.delete("/:id/comment", async (req, res) => {
       res.status(202).json({ comment: deleteComment });
     }
     res.status(500).json({ error: "you are not authorized user " });
-  } catch (err) {
-    res.status(500).json({ error: "comment is not deleted" });
+  } catch (error) {
+    next(error);
   }
 });
 
 // add a favourite article  to the user data
-router.get("/:slug/favorite", async (req, res) => {
+router.get("/:slug/favorite", async (req, res, next) => {
   try {
     let article = await Article.findOne({ slug: req.params.slug });
     let user = await User.findByIdAndUpdate(
@@ -205,13 +209,13 @@ router.get("/:slug/favorite", async (req, res) => {
       { new: true }
     );
     res.status(202).json({ article: article });
-  } catch (err) {
-    res.status(500).json({ error: "article is not added" });
+  } catch (error) {
+    next(error);
   }
 });
 
 //unfavourite an article
-router.get("/:slug/unfavorite", async (req, res) => {
+router.get("/:slug/unfavorite", async (req, res, next) => {
   try {
     let article = await Article.findOne({ slug: req.params.slug });
     let user = await User.findByIdAndUpdate(
@@ -220,8 +224,8 @@ router.get("/:slug/unfavorite", async (req, res) => {
       { new: true }
     );
     res.status(202).json({ article: article });
-  } catch (err) {
-    res.status(500).json({ error: "article is  not removed" });
+  } catch (error) {
+    next(error);
   }
 });
 module.exports = router;
