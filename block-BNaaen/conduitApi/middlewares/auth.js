@@ -11,13 +11,25 @@ module.exports = {
     try {
       let isVerified = jwt.verify(token, process.env.SECRET);
       req.user = isVerified;
-      console.log(req.user);
       return next();
     } catch (err) {
-      console.log(" get an error  token is not matched menas", err);
       return res
         .status(500)
         .json({ error: "token is not valid you need to login again" });
+    }
+  },
+  optionalAuthorization: async (req, res, next) => {
+    try {
+      let token = req.headers.authorization;
+      if (!token) {
+        req.user = null;
+        return next();
+      }
+      let isVerified = jwt.verify(token, process.env.SECRET);
+      req.user = isVerified;
+      return next();
+    } catch (err) {
+      res.status(500).json({ error: err });
     }
   },
 };

@@ -3,8 +3,11 @@ const router = express.Router();
 const User = require("../models/users");
 const auth = require("../middlewares/auth");
 
+//only verified users have access to these routes
+ router.use(auth.isVerified);
+
 // get the current logged in user information
-router.get("/", auth.isVerified, async (req, res, next) => {
+router.get("/",  async (req, res, next) => {
   try {
     console.log("this is the current logged in user information", req.user);
     let user = await User.findOne({ email: req.user.email });
@@ -14,8 +17,10 @@ router.get("/", auth.isVerified, async (req, res, next) => {
   }
 });
 
+
+
 // update current logged in user information
-router.put("/", auth.isVerified, async (req, res, next) => {
+router.put("/",  async (req, res, next) => {
   try {
     let user = await User.findOneAndUpdate(
       { email: req.user.email },

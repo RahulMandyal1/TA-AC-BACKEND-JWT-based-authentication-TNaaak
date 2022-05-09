@@ -9,11 +9,10 @@ router.get("/", function (req, res, next) {
 
 router.post("/", async (req, res) => {
   try {
-    req.body.followingList = [];
-    req.body.followerList = [];
     let user = await User.create(req.body);
     let token = user.signToken();
-    res.status(201).json(token);
+    console.log(token);
+    res.status(201).json({ user: user });
   } catch (err) {
     res.json({ err: err });
   }
