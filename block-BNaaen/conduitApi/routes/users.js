@@ -7,12 +7,11 @@ router.get("/", function (req, res, next) {
   res.send("respond with a resource");
 });
 
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
     let user = await User.create(req.body);
     let token = user.signToken();
-    console.log(token);
-    res.status(201).json({ user: user });
+    res.status(201).json({ user: user.userJSON(token) });
   } catch (error) {
     next(error);
   }
@@ -42,7 +41,7 @@ router.post("/login", async (req, res) => {
     // if user password is mathced then generate  the user  jwt token
     // and send it to the user
     let token = user.signToken();
-    res.status(202).json({ user: user });
+    res.status(202).json({ user: user.userJSON(token) });
   } catch (error) {
     next(error);
   }

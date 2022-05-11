@@ -9,8 +9,8 @@ module.exports = {
   isVerified: async function (req, res, next) {
     let token = req.headers.authorization;
     try {
-      let isVerified = jwt.verify(token, process.env.SECRET);
-      req.user = isVerified;
+      let payload= jwt.verify(token, process.env.SECRET);
+      req.user = payload;
       return next();
     } catch (err) {
       return res
@@ -19,17 +19,20 @@ module.exports = {
     }
   },
   optionalAuthorization: async (req, res, next) => {
+    let token = req.headers.authorization;
     try {
-      let token = req.headers.authorization;
       if (!token) {
-        req.user = null;
+        req.user = {
+          id: null,
+          email: null,
+        };
         return next();
       }
-      let isVerified = jwt.verify(token, process.env.SECRET);
-      req.user = isVerified;
+      let payload = jwt.verify(token, process.env.SECRET);
+      req.user = payload;
       return next();
-    } catch (err) {
-      res.status(500).json({ error: err });
+    } catch (error) {
+      next(error);
     }
   },
 };
