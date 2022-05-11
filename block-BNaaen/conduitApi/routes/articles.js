@@ -16,6 +16,7 @@ let {
   commentformat,
   formatArticles,
   formatcomments,
+  randomNumber,
 } = formatData;
 
 router.use(auth.optionalAuthorization);
@@ -123,7 +124,8 @@ router.put("/:slug", async (req, res, next) => {
     req.body.taglist = req.body.taglist.split(",");
   }
   if (req.body.title) {
-    req.body.slug = req.body.title.split(" ").join("_");
+    req.body.slug = req.body.title + "_" + randomNumber();
+    req.body.slug = req.body.slug.split(",").join("-");
   }
   try {
     let user = req.user.id;
