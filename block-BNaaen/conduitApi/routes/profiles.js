@@ -3,6 +3,9 @@ const router = express.Router();
 const auth = require("../middlewares/auth");
 const User = require("../models/users");
 const Article = require("../models/articles");
+const { token } = require("morgan");
+const formatData = require("../helpers/formatdata");
+let { userProfile, userJSON, articleformat } = formatData;
 
 // get any user profile by his username
 router.get(
@@ -10,11 +13,10 @@ router.get(
   auth.optionalAuthorization,
   async function (req, res, next) {
     try {
+      let id = req.user.id;
       let username = req.params.username;
-      let user = await User.findOne({ username: username }).select({
-        password: 0,
-      });
-      res.status(200).json({ user: user });
+      let user = await User.findOne({ username: username });
+      res.status(200).json({ user: userProfile(user, id) });
     } catch (error) {
       next(error);
     }
@@ -27,17 +29,18 @@ router.use(auth.isVerified);
 //follow  the user
 router.get("/:username/follow", async (req, res, next) => {
   try {
+    let id = req.user.id;
     let username = req.params.username;
     let user = await User.findOne({ username: username });
     let updateProfile = await User.findByIdAndUpdate(
-      req.user.id,
+      id,
       {
         $push: { followingList: user._id },
       },
       {
         new: true,
       }
-    );
+    ).select({ password: 0 });
     //update the targated user data
     let targatedUser = await User.findByIdAndUpdate(
       user._id,
@@ -45,20 +48,24 @@ router.get("/:username/follow", async (req, res, next) => {
         $push: { followersList: updateProfile._id },
       },
       { new: true }
-    );
-    res.status(202).json({ user: updateProfile, targatedUser: targatedUser });
+    ).select({ password: 0 });
+    res.status(202).json({
+      user: userProfile(updateProfile, id),
+      targatedUser: userProfile(targatedUser, id),
+    });
   } catch (error) {
     next(error);
   }
 });
 
 //unfollow the user
-router.get("/:username/unfollow", async (req, res, next) => {
+router.delete("/:username/follow", async (req, res, next) => {
   try {
+    let id = req.user.id;
     let username = req.params.username;
     let user = await User.findOne({ username: username });
     let updateProfile = await User.findByIdAndUpdate(
-      req.user.id,
+      id,
       {
         $pull: { followingList: user._id },
       },
@@ -74,7 +81,10 @@ router.get("/:username/unfollow", async (req, res, next) => {
       },
       { new: true }
     );
-    res.status(202).json({ user: updateProfile, targatedUser: targatedUser });
+    res.status(202).json({
+      user: userProfile(updateProfile, id),
+      targatedUser: userProfile(targatedUser, id),
+    });
   } catch (error) {
     next(error);
   }
